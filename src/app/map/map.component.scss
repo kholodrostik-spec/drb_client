@@ -1,25 +1,41 @@
-:host {
+@import 'leaflet/dist/leaflet.css';
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+app-root {
   display: block;
-  width: 100vw;
-  height: 100vh;
-  background: #1a1f2e;
+  width: 100%;
+  height: 100%;
+}:host {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .map-wrapper {
+  position: relative;
   width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+  background: #1a1f2e;
 }
 
 #map {
-  background: #aad3df;
-  border-radius: 12px;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .sidebar {
-  position: fixed;
+  position: absolute;
   top: 16px;
   left: 16px;
   z-index: 1000;
@@ -31,7 +47,7 @@
 .sidebar-btn {
   width: 110px;
   padding: 10px;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0, 0, 0, 0.85);
   color: #fff;
   border: 1px solid #444;
   border-radius: 8px;
@@ -39,12 +55,8 @@
   cursor: pointer;
 }
 
-.sidebar-btn:hover {
-  background: rgba(30,30,30,0.9);
-}
-
 .search-box {
-  position: fixed;
+  position: absolute;
   top: 16px;
   left: 144px;
   z-index: 1000;
@@ -55,7 +67,7 @@
 .search-input {
   width: 220px;
   padding: 10px 14px;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0, 0, 0, 0.85);
   color: #fff;
   border: 1px solid #444;
   border-radius: 8px;
@@ -63,20 +75,12 @@
   outline: none;
 }
 
-.search-input::placeholder {
-  color: #888;
-}
-
 .search-btn {
   padding: 10px 16px;
-  background: rgba(30,30,30,0.9);
+  background: rgba(30, 30, 30, 0.9);
   color: #fff;
   border: 1px solid #444;
   border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
-}
-
-.search-btn:hover {
-  background: #4CAF50;
 }

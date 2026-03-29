@@ -1,23 +1,16 @@
-* {
+@import 'leaflet/dist/leaflet.css';
+
+html,
+body {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background: #1a1f2e;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
-.leaflet-container {
-  background: #aad3df !important;
-}
-
-.leaflet-tile {
-  border: 0 !important;
-  outline: none !important;
-}
-
-.leaflet-tile-container {
-  will-change: transform;
+app-root {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
