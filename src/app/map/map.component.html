@@ -1,0 +1,15 @@
+<div class="map-wrapper">
+  <div class="sidebar">
+    <button class="sidebar-btn">Button 1</button>
+    <button class="sidebar-btn">Button 2</button>
+    <button class="sidebar-btn">Button 3</button>
+    <button class="sidebar-btn">Button 4</button>
+  </div>
+
+  <div class="search-box">
+    <input type="text" [(ngModel)]="searchText" placeholder="Search..." class="search-input" />
+    <button (click)="onSearch()" class="search-btn">Go</button>
+  </div>
+
+  <div id="map"></div>
+</div>
