@@ -1,0 +1,23 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a1f2e;
+  overflow: hidden;
+}
+
+.leaflet-container {
+  background: #aad3df !important;
+}
+
+.leaflet-tile {
+  border: 0 !important;
+  outline: none !important;
+}
+
+.leaflet-tile-container {
+  will-change: transform;
+}
