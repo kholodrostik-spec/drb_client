@@ -11,6 +11,12 @@
       </div>
 
       <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="text" [(ngModel)]="email"
+               name="email" placeholder="Enter your email" required/>
+      </div>
+
+      <div class="field">
         <label for="password">Password</label>
         <input id="password" type="password" [(ngModel)]="password"
                name="password" placeholder="Enter password" required/>
@@ -40,6 +46,10 @@
         @if (!isLoading) { <span>Register</span> }
         @if (isLoading) { <span>Loading...</span> }
       </button>
+
+      <div class="login-link">
+        Already have an account? <a routerLink="/login">Log in</a>
+      </div>
 
     </form>
   </div>

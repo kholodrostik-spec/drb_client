@@ -1,20 +1,36 @@
 <div class="map-wrapper">
-  <div class="sidebar">
-    <button class="sidebar-btn">Button 1</button>
-    <button class="sidebar-btn">Button 2</button>
-    <button class="sidebar-btn">Button 3</button>
-    <button class="sidebar-btn">Button 4</button>
-  </div>
+  <button class="menu-toggle" (click)="toggleSidebar()">☰</button>
 
+  <div class="sidebar-backdrop" *ngIf="isSidebarOpen" (click)="toggleSidebar()"></div>
+
+  <aside class="sidebar" [class.open]="isSidebarOpen">
+    <div class="sidebar-header">
+      <span>Menu</span>
+    </div>
+
+    <div class="sidebar-content">
+      <button class="sidebar-btn">Button 1</button>
+      <button class="sidebar-btn">Button 2</button>
+      <button class="sidebar-btn">Button 3</button>
+      <button class="sidebar-btn">Button 4</button>
+    </div>
+  </aside>
+
+  <div class="search-area" [class.shifted]="isSidebarOpen">
   <div class="search-box">
     <input
       type="text"
       [(ngModel)]="searchText"
+      (input)="onSearchInput()"
       placeholder="Search..."
       class="search-input"
     />
     <button (click)="onSearch()" class="search-btn">Go</button>
   </div>
+
+  <div class="search-history" *ngIf="showSearchHistory">
+  </div>
+</div>
 
   <div id="map"></div>
 </div>

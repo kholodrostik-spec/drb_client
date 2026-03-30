@@ -1,17 +1,20 @@
 import { AfterViewInit, Component, HostListener, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.scss']
 })
 export class MapComponent implements AfterViewInit, OnDestroy {
   private map?: L.Map;
   searchText = '';
+  isSidebarOpen = false;
+  showSearchHistory = false;
 
   private readonly irelandBounds = L.latLngBounds(
     [51.2, -10.8],
@@ -52,6 +55,18 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.map?.invalidateSize();
       this.map?.fitBounds(this.irelandBounds, { padding: [20, 20] });
     }, 100);
+  }
+
+    toggleSidebar(): void {
+      this.isSidebarOpen = !this.isSidebarOpen;
+
+      setTimeout(() => {
+        this.map?.invalidateSize();
+      }, 310);
+  }
+
+    onSearchInput(): void {
+      this.showSearchHistory = this.searchText.trim().length > 0;
   }
 
   @HostListener('window:resize')

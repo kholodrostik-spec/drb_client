@@ -1,0 +1,39 @@
+<div class="register-page">
+  <div class="register-card">
+    <h1 class="title">Registration</h1>
+
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="text" [(ngModel)]="email"
+               name="email" placeholder="Enter your email" required/>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" [(ngModel)]="password"
+               name="password" placeholder="Enter password" required/>
+      </div>
+
+      @if (errorMessage) {
+        <div class="error-message">{{ errorMessage }}</div>
+      }
+      @if (successMessage) {
+        <div class="success-message">{{ successMessage }}</div>
+      }
+
+      <button type="submit" [disabled]="isLoading" class="submit-btn">
+        @if (!isLoading) { <span>Register</span> }
+        @if (isLoading) { <span>Loading...</span> }
+      </button>
+
+    <div class="login-link">
+      Don't have an account? <a routerLink="/">Register</a>
+    </div>
+    
+    </form>
+
+
+  </div>
+</div>
