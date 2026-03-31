@@ -36,6 +36,8 @@ app-root {
 
 .menu-toggle:hover {
   background: rgba(30, 30, 30, 0.95);
+}
+
 .sidebar {
   position: absolute;
   top: 16px;
@@ -44,7 +46,6 @@ app-root {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
 }
 
 .sidebar-btn {
@@ -56,15 +57,6 @@ app-root {
   border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
-}
-
-.search-box {
-  position: absolute;
-  top: 16px;
-  left: 144px;
-  z-index: 1000;
-  display: flex;
-  gap: 6px;
 }
 
 .search-input {
@@ -176,9 +168,80 @@ app-root {
 }
 
 .search-history {
-  width: 280px;
-  height: 140px;
+  width: 100%;
   background: rgba(0, 0, 0, 0.88);
   border: 1px solid #444;
   border-radius: 10px;
+  min-height: 140px;
+}
+
+::ng-deep .custom-route-popup .leaflet-popup-content-wrapper {
+  background: rgba(18, 22, 34, 0.97);
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 12px;
+}
+
+::ng-deep .custom-route-popup .leaflet-popup-tip {
+  background: rgba(18, 22, 34, 0.97);
+}
+
+::ng-deep .custom-route-popup .leaflet-popup-content {
+  margin: 12px;
+  min-width: 180px;
+}
+
+::ng-deep .route-popup-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+::ng-deep .route-popup-actions {
+  display: flex;
+  gap: 8px;
+}
+
+::ng-deep .popup-btn {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+::ng-deep .popup-btn-primary {
+  background: #1f6feb;
+  color: #fff;
+}
+
+::ng-deep .popup-btn-secondary {
+  background: #222;
+  color: #fff;
+}
+
+.route-popup-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #fff;
+}
+
+.route-popup-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.popup-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #444;
+  background: #1f1f1f;
+  color: #fff;
+  cursor: pointer;
+}
+
+.popup-btn.primary {
+  background: #2f80ff;
+  border-color: #2f80ff;
 }
