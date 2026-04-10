@@ -1,9 +1,41 @@
+// ─── Page entrance ────────────────────────────────────────────────────────────
+
+:host {
+  display: block;
+  animation: page-enter 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// ─── Layout ───────────────────────────────────────────────────────────────────
+
 .register-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #000;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .register-card {
@@ -13,15 +45,21 @@
   border: 1px solid #333;
   width: 100%;
   max-width: 400px;
+  animation: card-enter 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
 }
+
+// ─── Typography ───────────────────────────────────────────────────────────────
 
 .title {
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 28px;
   color: #fff;
   text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
 }
+
+// ─── Form fields ──────────────────────────────────────────────────────────────
 
 .field {
   display: flex;
@@ -33,6 +71,7 @@
     color: #aaa;
     margin-bottom: 6px;
     font-weight: 500;
+    font-family: Arial, Helvetica, sans-serif;
   }
 
   input {
@@ -43,27 +82,23 @@
     background: #1a1a1a;
     color: #fff;
     outline: none;
+    font-family: Arial, Helvetica, sans-serif;
     transition: border-color 0.2s;
 
-    &::placeholder {
-      color: #555;
-    }
-
-    &:focus {
-      border-color: #666;
-    }
-
-    &.error-input {
-      border-color: #c00;
-    }
+    &::placeholder { color: #555; }
+    &:focus { border-color: #666; }
+    &.error-input { border-color: #c00; }
   }
 }
+
+// ─── Hints & messages ─────────────────────────────────────────────────────────
 
 .hint {
   font-size: 12px;
   margin-top: 4px;
+  font-family: Arial, Helvetica, sans-serif;
 
-  &.error { color: #e53e3e; }
+  &.error   { color: #e53e3e; }
   &.success { color: #48bb78; }
 }
 
@@ -75,6 +110,7 @@
   padding: 10px 14px;
   font-size: 13px;
   margin-bottom: 16px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .success-message {
@@ -85,7 +121,10 @@
   padding: 10px 14px;
   font-size: 13px;
   margin-bottom: 16px;
+  font-family: Arial, Helvetica, sans-serif;
 }
+
+// ─── Submit button ────────────────────────────────────────────────────────────
 
 .submit-btn {
   width: 100%;
@@ -97,11 +136,10 @@
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
   transition: background 0.2s;
 
-  &:hover:not(:disabled) {
-    background: #333;
-  }
+  &:hover:not(:disabled) { background: #333; }
 
   &:disabled {
     background: #111;
@@ -110,19 +148,20 @@
   }
 }
 
+// ─── Link ─────────────────────────────────────────────────────────────────────
+
 .login-link {
   text-align: center;
   margin-top: 16px;
   font-size: 13px;
   color: #aaa;
+  font-family: Arial, Helvetica, sans-serif;
 
   a {
     color: #fff;
     text-decoration: underline;
     cursor: pointer;
 
-    &:hover {
-      color: #ccc;
-    }
+    &:hover { color: #ccc; }
   }
 }

@@ -1,12 +1,20 @@
 @import 'leaflet/dist/leaflet.css';
 
+// ─── Global font ─────────────────────────────────────────────────────────────
+
+* {
+  font-family: Arial, Helvetica, sans-serif;
+  box-sizing: border-box;
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 app-root {
@@ -15,12 +23,59 @@ app-root {
   height: 100%;
 }
 
+// ─── Page transition animations ──────────────────────────────────────────────
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes page-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// Applied by Angular router or manually on host element
+.page-enter {
+  animation: page-enter 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.page-exit {
+  animation: page-exit 0.22s cubic-bezier(0.55, 0, 1, 0.45) both;
+}
+
+// ─── Leaflet popup styles ─────────────────────────────────────────────────────
+
 .confirm-popup .leaflet-popup-content-wrapper {
   background: linear-gradient(135deg, #0f172a, #1e293b) !important;
   color: #e2e8f0 !important;
   border-radius: 16px !important;
   padding: 0 !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 .confirm-popup .leaflet-popup-content {
@@ -37,6 +92,7 @@ app-root {
   flex-direction: column;
   gap: 12px;
   font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .popup-actions {
@@ -51,6 +107,7 @@ app-root {
   padding: 6px 14px;
   font-size: 13px;
   cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 #confirm-yes {
@@ -69,27 +126,26 @@ app-root {
   border-radius: 10px;
   cursor: pointer;
   font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
   transition: all 0.25s ease;
 }
 
-/* OK кнопка */
 .popup-btn-ok {
   background: #334155;
   color: white;
+
+  &:hover {
+    background: #475569;
+    transform: translateY(-1px);
+  }
 }
 
-.popup-btn-ok:hover {
-  background: #475569;
-  transform: translateY(-1px);
-}
-
-/* Cancel кнопка */
 .popup-btn-cancel {
   background: #e5e7eb;
   color: #111827;
-}
 
-.popup-btn-cancel:hover {
-  background: #d1d5db;
-  transform: translateY(-1px);
+  &:hover {
+    background: #d1d5db;
+    transform: translateY(-1px);
+  }
 }

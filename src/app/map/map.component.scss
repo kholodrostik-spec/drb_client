@@ -1,23 +1,35 @@
 @import 'leaflet/dist/leaflet.css';
 
-html,
-body {
+// ─── Host entrance ────────────────────────────────────────────────────────────
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: map-enter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes map-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 app-root {
   display: block;
   width: 100%;
   height: 100%;
-}:host {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
+
+// ─── Map wrapper ──────────────────────────────────────────────────────────────
 
 .map-wrapper {
   position: relative;
@@ -34,51 +46,7 @@ app-root {
   height: 100%;
 }
 
-.menu-toggle:hover {
-  background: rgba(30, 30, 30, 0.95);
-}
-
-.sidebar {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sidebar-btn {
-  width: 110px;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.search-input {
-  width: 220px;
-  padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-}
-
-.search-btn {
-  padding: 10px 16px;
-  background: rgba(30, 30, 30, 0.9);
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-}
+// ─── Menu toggle ──────────────────────────────────────────────────────────────
 
 .menu-toggle {
   position: absolute;
@@ -93,7 +61,12 @@ app-root {
   color: #fff;
   font-size: 28px;
   cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
+
+  &:hover { background: rgba(30, 30, 30, 0.95); }
 }
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 .sidebar-backdrop {
   position: absolute;
@@ -115,17 +88,17 @@ app-root {
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   padding-top: 84px;
-}
+  font-family: Arial, Helvetica, sans-serif;
 
-.sidebar.open {
-  transform: translateX(0);
+  &.open { transform: translateX(0); }
 }
 
 .sidebar-header {
   padding: 0 20px 16px;
   color: #fff;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .sidebar-content {
@@ -145,12 +118,13 @@ app-root {
   font-size: 14px;
   text-align: left;
   cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
+  transition: background 0.15s;
+
+  &:hover { background: rgba(255, 255, 255, 0.08); }
 }
 
-.search-box {
-  display: flex;
-  gap: 8px;
-}
+// ─── Search area ──────────────────────────────────────────────────────────────
 
 .search-area {
   position: absolute;
@@ -161,10 +135,33 @@ app-root {
   flex-direction: column;
   gap: 8px;
   transition: left 0.3s ease;
+
+  &.shifted { left: 300px; }
 }
 
-.search-area.shifted {
-  left: 300px;
+.search-box { display: flex; gap: 8px; }
+
+.search-input {
+  width: 220px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
+  outline: none;
+}
+
+.search-btn {
+  padding: 10px 16px;
+  background: rgba(30, 30, 30, 0.9);
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
+  cursor: pointer;
 }
 
 .search-history {
@@ -175,104 +172,82 @@ app-root {
   min-height: 140px;
 }
 
+// ─── Profile badge ────────────────────────────────────────────────────────────
+
+.profile-badge {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 6px 16px;
+  border-radius: 20px;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+// ─── Route error ──────────────────────────────────────────────────────────────
+
+.route-error {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  background: rgba(180, 0, 0, 0.88);
+  color: #fff;
+  font-size: 13px;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 8px 18px;
+  border-radius: 8px;
+}
+
+// ─── Leaflet popup overrides ──────────────────────────────────────────────────
+
 ::ng-deep .custom-route-popup .leaflet-popup-content-wrapper {
   background: rgba(18, 22, 34, 0.97);
   color: #fff;
   border: 1px solid #444;
   border-radius: 12px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-::ng-deep .custom-route-popup .leaflet-popup-tip {
-  background: rgba(18, 22, 34, 0.97);
-}
+::ng-deep .custom-route-popup .leaflet-popup-tip { background: rgba(18, 22, 34, 0.97); }
+::ng-deep .custom-route-popup .leaflet-popup-content { margin: 12px; min-width: 180px; }
+::ng-deep .route-popup-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; font-family: Arial, Helvetica, sans-serif; }
+::ng-deep .route-popup-actions { display: flex; gap: 8px; }
+::ng-deep .popup-btn { padding: 8px 10px; border-radius: 8px; border: 1px solid #444; cursor: pointer; font-size: 13px; font-family: Arial, Helvetica, sans-serif; }
+::ng-deep .popup-btn-primary { background: #1f6feb; color: #fff; }
+::ng-deep .popup-btn-secondary { background: #222; color: #fff; }
 
-::ng-deep .custom-route-popup .leaflet-popup-content {
-  margin: 12px;
-  min-width: 180px;
-}
+// ─── Nearby locations ─────────────────────────────────────────────────────────
 
-::ng-deep .route-popup-title {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-::ng-deep .route-popup-actions {
-  display: flex;
-  gap: 8px;
-}
-
-::ng-deep .popup-btn {
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid #444;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-::ng-deep .popup-btn-primary {
-  background: #1f6feb;
-  color: #fff;
-}
-
-::ng-deep .popup-btn-secondary {
-  background: #222;
-  color: #fff;
-}
-
-.route-popup-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: #fff;
-}
-
-.route-popup-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.popup-btn {
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #444;
-  background: #1f1f1f;
-  color: #fff;
-  cursor: pointer;
-}
-
-.popup-btn.primary {
-  background: #2f80ff;
-  border-color: #2f80ff;
-}
-
-// ─── Nearby locations section ─────────────────────────────────────────────────
-
-.nearby-section {
-  margin-bottom: 16px;
-}
+.nearby-section { margin-bottom: 16px; }
 
 .nearby-loading {
   font-size: 13px;
   color: #999;
   text-align: center;
   padding: 8px 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .nearby-label {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: #999;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 8px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-.nearby-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+.nearby-list { display: flex; flex-direction: column; gap: 8px; }
 
 .nearby-card {
   background: #f7f7f7;
@@ -283,17 +258,13 @@ app-root {
 
 .nearby-card-name {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: #1a1a1a;
   margin-bottom: 4px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-.nearby-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
+.nearby-card-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 
 .nearby-card-category {
   font-size: 11px;
@@ -301,33 +272,29 @@ app-root {
   background: #555;
   padding: 2px 8px;
   border-radius: 4px;
-  font-weight: 500;
+  font-weight: 700;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .nearby-card-rating {
   font-size: 12px;
   color: #f5a623;
-  font-weight: 500;
+  font-weight: 700;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .nearby-card-desc {
   font-size: 12px;
   color: #666;
   line-height: 1.4;
+  font-family: Arial, Helvetica, sans-serif;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-// ─── Bottom sheet ───────────────────────────────────────────────────────────
-
-.bottom-sheet-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1400;
-  background: rgba(0, 0, 0, 0.5);
-}
+// ─── Bottom sheet ─────────────────────────────────────────────────────────────
 
 .bottom-sheet {
   position: fixed;
@@ -340,13 +307,12 @@ app-root {
   border-radius: 20px 20px 0 0;
   padding: 16px 20px 24px;
   transform: translateY(100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   max-height: 50vh;
   overflow-y: auto;
-}
+  font-family: Arial, Helvetica, sans-serif;
 
-.bottom-sheet.open {
-  transform: translateY(0);
+  &.open { transform: translateY(0); }
 }
 
 .bottom-sheet-close {
@@ -366,10 +332,9 @@ app-root {
   justify-content: center;
   transition: background 0.2s;
   z-index: 10;
-}
+  font-family: Arial, Helvetica, sans-serif;
 
-.bottom-sheet-close:hover {
-  background: rgba(255, 255, 255, 0.2);
+  &:hover { background: rgba(255, 255, 255, 0.2); }
 }
 
 .bottom-sheet-handle {
@@ -382,10 +347,11 @@ app-root {
 
 .bottom-sheet-title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   color: #fff;
   margin-bottom: 16px;
   text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .bottom-sheet-actions {
@@ -405,43 +371,36 @@ app-root {
   border-radius: 12px;
   color: #fff;
   font-size: 15px;
+  font-family: Arial, Helvetica, sans-serif;
   cursor: pointer;
   transition: background 0.2s;
+
+  &:hover { background: rgba(255, 255, 255, 0.15); }
 }
 
-.sheet-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
+.sheet-btn-icon { font-size: 20px; }
 
-.sheet-btn-icon {
-  font-size: 20px;
-}
+.sheet-btn-label { font-family: Arial, Helvetica, sans-serif; }
 
 .sheet-hint {
   font-size: 13px;
   color: #888;
   text-align: center;
   margin-top: 8px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-// ─── Review form ─────────────────────────────────────────────────────────────
+// ─── Review form ──────────────────────────────────────────────────────────────
 
-.star-row {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 16px;
-}
+.star-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
 
 .star {
   font-size: 28px;
   color: rgba(255, 255, 255, 0.3);
   cursor: pointer;
   transition: color 0.2s;
-}
 
-.star.active {
-  color: #f5a623;
+  &.active { color: #f5a623; }
 }
 
 .review-textarea {
@@ -452,14 +411,12 @@ app-root {
   border-radius: 12px;
   color: #fff;
   font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
   resize: none;
   margin-bottom: 16px;
 }
 
-.review-actions {
-  display: flex;
-  gap: 10px;
-}
+.review-actions { display: flex; gap: 10px; }
 
 .sheet-btn-secondary {
   flex: 1;
@@ -469,6 +426,7 @@ app-root {
   border-radius: 10px;
   color: #fff;
   font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
   cursor: pointer;
 }
 
@@ -480,13 +438,11 @@ app-root {
   border-radius: 10px;
   color: #fff;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: Arial, Helvetica, sans-serif;
   cursor: pointer;
-}
 
-.sheet-btn-primary:disabled {
-  background: #555;
-  cursor: not-allowed;
+  &:disabled { background: #555; cursor: not-allowed; }
 }
 
 .sheet-loading {
@@ -494,4 +450,5 @@ app-root {
   padding: 20px;
   color: #fff;
   font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
 }
