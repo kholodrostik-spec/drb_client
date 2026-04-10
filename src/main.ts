@@ -6,6 +6,7 @@ import { RegisterComponent } from './app/features/auth/register/register.compone
 import { LoginComponent } from './app/features/auth/login/login.component';
 import { MapComponent } from './app/map/map.component';
 import { authInterceptor } from './app/interceptors/auth.interceptor';
+import { RouteSettingsComponent } from './app/route/route.component';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -14,6 +15,7 @@ bootstrapApplication(AppComponent, {
       { path: '', component: RegisterComponent },
       { path: 'login', component: LoginComponent },
       { path: 'map', component: MapComponent },
+      { path: 'route', component: RouteSettingsComponent },
       { path: '**', redirectTo: '' }
     ])
   ]

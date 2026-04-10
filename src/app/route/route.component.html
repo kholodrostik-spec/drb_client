@@ -1,0 +1,65 @@
+<div class="settings-page">
+
+  <div class="settings-header">
+    <button class="back-btn" (click)="goBack()">← Back to map</button>
+    <h1 class="settings-title">AI route settings</h1>
+    <p class="settings-subtitle">Adjust how the AI picks the best car route for you</p>
+  </div>
+
+  <div class="settings-loading" *ngIf="isLoading">
+    Loading your preferences...
+  </div>
+
+  <div class="settings-body" *ngIf="!isLoading">
+
+    <div class="slider-list">
+      <div class="slider-item" *ngFor="let s of sliders">
+        <div class="slider-top">
+          <div class="slider-info">
+            <span class="slider-label">{{ s.label }}</span>
+            <span class="slider-desc">{{ s.description }}</span>
+          </div>
+          <div class="slider-input-wrap">
+            <input
+              type="number"
+              class="slider-number"
+              [value]="prefs[s.key]"
+              min="0" max="1" step="0.01"
+              (change)="onInputChange(s.key, $event)"
+            />
+          </div>
+        </div>
+
+        <div class="slider-track-wrap">
+          <span class="slider-min">0%</span>
+          <input
+            type="range"
+            class="slider-range"
+            min="0" max="1" step="0.01"
+            [value]="prefs[s.key]"
+            (input)="onSliderChange(s.key, $event)"
+          />
+          <span class="slider-max">100%</span>
+          <span class="slider-val">{{ formatValue(prefs[s.key]) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-actions">
+      <button class="btn-reset" (click)="resetToDefaults()">Reset to defaults</button>
+      <button class="btn-save" (click)="save()" [disabled]="isSaving">
+        {{ isSaving ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+
+    <div class="save-success" *ngIf="saveSuccess">
+      Saved successfully
+    </div>
+
+    <div class="save-error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+  </div>
+
+</div>
