@@ -14,3 +14,82 @@ app-root {
   width: 100%;
   height: 100%;
 }
+
+.confirm-popup .leaflet-popup-content-wrapper {
+  background: linear-gradient(135deg, #0f172a, #1e293b) !important;
+  color: #e2e8f0 !important;
+  border-radius: 16px !important;
+  padding: 0 !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.confirm-popup .leaflet-popup-content {
+  margin: 0 !important;
+}
+
+.confirm-popup .leaflet-popup-tip {
+  background: #1e293b !important;
+}
+
+.popup-confirm {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.popup-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.popup-actions button {
+  border: none;
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+#confirm-yes {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+#confirm-no {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.popup-btn {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.25s ease;
+}
+
+/* OK кнопка */
+.popup-btn-ok {
+  background: #334155;
+  color: white;
+}
+
+.popup-btn-ok:hover {
+  background: #475569;
+  transform: translateY(-1px);
+}
+
+/* Cancel кнопка */
+.popup-btn-cancel {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.popup-btn-cancel:hover {
+  background: #d1d5db;
+  transform: translateY(-1px);
+}

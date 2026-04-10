@@ -35,10 +35,13 @@ export class LoginComponent {
       }
     ).subscribe({
       next: (response) => {
+        console.log('Token received:', response.accessToken);
         localStorage.setItem('accessToken', response.accessToken);
+        console.log('Token saved to localStorage:', localStorage.getItem('accessToken'));
         localStorage.setItem('userId', String(response.userId));
         localStorage.setItem('role', response.role);
         this.isLoading = false;
+        console.log('Navigating to /map...');
         this.router.navigate(['/map']);
       },
       error: (err) => {

@@ -1,3 +1,7 @@
+<div class="route-error" *ngIf="routeErrorMessage">
+  {{ routeErrorMessage }}
+</div>
+
 <div class="map-wrapper">
   <button class="menu-toggle" (click)="toggleSidebar()">☰</button>
 
@@ -11,24 +15,112 @@
     <div class="sidebar-content">
       <button class="sidebar-btn" (click)="clearMap()">Clear map</button>
       <button class="sidebar-btn" (click)="toggleSidebar()">Close menu</button>
+      <button class="sidebar-btn settings-btn" (click)="openRouteSettings()">
+        AI route settings
+      </button>
     </div>
   </aside>
 
   <div class="search-area" [class.shifted]="isSidebarOpen">
-  <div class="search-box">
-    <input
-      type="text"
-      [(ngModel)]="searchText"
-      (input)="onSearchInput()"
-      placeholder="Search..."
-      class="search-input"
-    />
-    <button (click)="onSearch()" class="search-btn">Go</button>
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="searchText"
+        (input)="onSearchInput()"
+        placeholder="Search..."
+        class="search-input"
+      />
+      <button (click)="onSearch()" class="search-btn">Go</button>
+    </div>
+
+    <div class="search-history" *ngIf="showSearchHistory">
+    </div>
   </div>
 
-  <div class="search-history" *ngIf="showSearchHistory">
+  <!-- Car profile badge — shown after a car route is built -->
+  <div class="profile-badge" *ngIf="selectedCarProfile">
+    Profile: {{ selectedCarProfile }}
   </div>
-</div>
 
   <div id="map"></div>
+</div>
+
+<!-- Bottom sheet -->
+<div class="bottom-sheet" [class.open]="isBottomSheetOpen">
+
+  <button class="bottom-sheet-close" (click)="closeBottomSheet()">✕</button>
+
+  <ng-container *ngIf="!isReviewMode">
+    <div class="bottom-sheet-handle"></div>
+
+    <div class="nearby-section" *ngIf="showNearbyLocations">
+      <div class="nearby-loading" *ngIf="isLoadingNearby">Loading nearby places...</div>
+
+      <div class="nearby-list" *ngIf="!isLoadingNearby && nearbyLocations.length > 0">
+        <div class="nearby-label">Nearby places</div>
+        <div class="nearby-card" *ngFor="let loc of nearbyLocations">
+          <div class="nearby-card-name">{{ loc.name }}</div>
+          <div class="nearby-card-meta">
+            <span class="nearby-card-category" *ngIf="loc.category">{{ loc.category }}</span>
+            <span class="nearby-card-rating" *ngIf="loc.rating">★ {{ loc.rating | number:'1.1-1' }}</span>
+          </div>
+          <div class="nearby-card-desc" *ngIf="loc.description">{{ loc.description }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-sheet-title">What would you like to do?</div>
+
+    <div class="bottom-sheet-actions">
+      <button class="sheet-btn walk" (click)="onWalkRoute()">
+        <span class="sheet-btn-icon">🚶</span>
+        <span class="sheet-btn-label">{{ startPoint ? 'Walk here' : 'Walk from here' }}</span>
+      </button>
+
+      <button class="sheet-btn car" (click)="onCarRoute()">
+        <span class="sheet-btn-icon">🚗</span>
+        <span class="sheet-btn-label">{{ startPoint ? 'Drive here' : 'Drive from here' }}</span>
+      </button>
+
+      <button class="sheet-btn review" (click)="onLeaveReview()">
+        <span class="sheet-btn-icon">⭐</span>
+        <span class="sheet-btn-label">Leave a review</span>
+      </button>
+    </div>
+
+    <div class="sheet-hint" *ngIf="startPoint && waitingForSecondPoint">
+      Start point set — tap map to choose destination
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="isReviewMode">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-title">Leave a review</div>
+
+    <div class="star-row">
+      <span
+        *ngFor="let star of stars"
+        class="star"
+        [class.active]="star <= reviewRating"
+        (click)="setRating(star)">
+        ★
+      </span>
+    </div>
+
+    <textarea
+      class="review-textarea"
+      [(ngModel)]="reviewComment"
+      placeholder="Share your experience (optional)"
+      rows="3">
+    </textarea>
+
+    <div class="review-actions">
+      <button class="sheet-btn-secondary" (click)="isReviewMode = false; showNearbyLocations = true">Back</button>
+      <button class="sheet-btn-primary" (click)="submitReview()" [disabled]="reviewRating === 0">Submit</button>
+    </div>
+  </ng-container>
+
+  <div class="sheet-loading" *ngIf="isLoadingRoute">
+    <span>Building route...</span>
+  </div>
 </div>
