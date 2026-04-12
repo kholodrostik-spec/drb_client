@@ -13,25 +13,24 @@
   <div class="settings-body" *ngIf="!isLoading">
 
     <div class="slider-list">
-      <div class="slider-item" *ngFor="let s of sliders">
+      <div class="slider-item" *ngFor="let s of sliders; let i = index"
+           [style.animation-delay]="(i * 60) + 'ms'">
+
         <div class="slider-top">
           <div class="slider-info">
             <span class="slider-label">{{ s.label }}</span>
             <span class="slider-desc">{{ s.description }}</span>
           </div>
-          <div class="slider-input-wrap">
-            <input
-              type="number"
-              class="slider-number"
-              [value]="prefs[s.key]"
-              min="0" max="1" step="0.01"
-              (change)="onInputChange(s.key, $event)"
-            />
-          </div>
+          <input
+            type="number"
+            class="slider-number"
+            [value]="prefs[s.key]"
+            min="0" max="1" step="0.01"
+            (change)="onInputChange(s.key, $event)"
+          />
         </div>
 
         <div class="slider-track-wrap">
-          <span class="slider-min">0%</span>
           <input
             type="range"
             class="slider-range"
@@ -39,9 +38,9 @@
             [value]="prefs[s.key]"
             (input)="onSliderChange(s.key, $event)"
           />
-          <span class="slider-max">100%</span>
           <span class="slider-val">{{ formatValue(prefs[s.key]) }}</span>
         </div>
+
       </div>
     </div>
 
@@ -52,14 +51,8 @@
       </button>
     </div>
 
-    <div class="save-success" *ngIf="saveSuccess">
-      Saved successfully
-    </div>
-
-    <div class="save-error" *ngIf="errorMessage">
-      {{ errorMessage }}
-    </div>
+    <div class="save-success" *ngIf="saveSuccess">Saved successfully</div>
+    <div class="save-error"   *ngIf="errorMessage">{{ errorMessage }}</div>
 
   </div>
-
 </div>
