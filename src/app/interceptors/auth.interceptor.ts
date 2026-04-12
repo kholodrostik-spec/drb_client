@@ -34,7 +34,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       console.error(`[Interceptor] Error ${error.status} on ${req.url}`);
-      if (error.status === 403 || error.status === 401) {
+      if (error.status === 401) {
         console.log('[Interceptor] Token invalid, clearing storage');
         localStorage.removeItem('accessToken');
         localStorage.removeItem('userId');
