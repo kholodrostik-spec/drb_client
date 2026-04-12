@@ -8,54 +8,55 @@
   <div class="sidebar-backdrop" *ngIf="isSidebarOpen" (click)="toggleSidebar()"></div>
 
   <aside class="sidebar" [class.open]="isSidebarOpen">
-    <div class="sidebar-header">
-      <span>Menu</span>
-    </div>
-
+    <div class="sidebar-header"><span>Menu</span></div>
     <div class="sidebar-content">
       <button class="sidebar-btn" (click)="clearMap()">Clear map</button>
       <button class="sidebar-btn" (click)="toggleSidebar()">Close menu</button>
-      <button class="sidebar-btn settings-btn" (click)="openRouteSettings()">
-        AI route settings
-      </button>
+      <button class="sidebar-btn settings-btn" (click)="openRouteSettings()">AI route settings</button>
     </div>
   </aside>
 
   <div class="search-area" [class.shifted]="isSidebarOpen">
-    <div class="search-box">
-      <input
-        type="text"
-        [(ngModel)]="searchText"
-        (input)="onSearchInput()"
-        placeholder="Search..."
-        class="search-input"
-      />
-      <button (click)="onSearch()" class="search-btn">Go</button>
-    </div>
-
-    <div class="search-history" *ngIf="showSearchHistory">
-    </div>
+  <div class="search-box">
+    <input
+      type="text"
+      [(ngModel)]="searchText"
+      (input)="onSearchInput()"
+      (keyup.enter)="onSearch()"
+      placeholder="Search locations..."
+      class="search-input"
+      autocomplete="off"
+    />
+    <button (click)="onSearch()" class="search-btn">Go</button>
   </div>
 
-  <!-- Car profile badge — shown after a car route is built -->
-  <div class="profile-badge" *ngIf="selectedCarProfile">
-    Profile: {{ selectedCarProfile }}
+  <!-- Dropdown results -->
+  <div class="search-dropdown" *ngIf="showSearchResults">
+    <div
+      class="search-dropdown-item"
+      *ngFor="let r of searchResults"
+      (click)="selectSearchResult(r)"
+    >
+      <span class="search-item-name">{{ r.name }}</span>
+      <span class="search-item-category" *ngIf="r.category">{{ r.category }}</span>
+    </div>
   </div>
+</div>
 
   <div id="map"></div>
 </div>
 
 <!-- Bottom sheet -->
 <div class="bottom-sheet" [class.open]="isBottomSheetOpen">
-
   <button class="bottom-sheet-close" (click)="closeBottomSheet()">✕</button>
 
+  <!-- ── Step 1: Action buttons ── -->
   <ng-container *ngIf="!isReviewMode">
     <div class="bottom-sheet-handle"></div>
 
+    <!-- Nearby locations -->
     <div class="nearby-section" *ngIf="showNearbyLocations">
       <div class="nearby-loading" *ngIf="isLoadingNearby">Loading nearby places...</div>
-
       <div class="nearby-list" *ngIf="!isLoadingNearby && nearbyLocations.length > 0">
         <div class="nearby-label">Nearby places</div>
         <div class="nearby-card" *ngFor="let loc of nearbyLocations">
@@ -76,15 +77,13 @@
         <span class="sheet-btn-icon">🚶</span>
         <span class="sheet-btn-label">{{ startPoint ? 'Walk here' : 'Walk from here' }}</span>
       </button>
-
       <button class="sheet-btn car" (click)="onCarRoute()">
         <span class="sheet-btn-icon">🚗</span>
         <span class="sheet-btn-label">{{ startPoint ? 'Drive here' : 'Drive from here' }}</span>
       </button>
-
-      <button class="sheet-btn review" (click)="onLeaveReview()">
+      <button class="sheet-btn review" (click)="onLeaveReview()" [disabled]="isLoadingReviewCheck">
         <span class="sheet-btn-icon">⭐</span>
-        <span class="sheet-btn-label">Leave a review</span>
+        <span class="sheet-btn-label">{{ isLoadingReviewCheck ? 'Checking...' : 'Leave a review' }}</span>
       </button>
     </div>
 
@@ -93,20 +92,44 @@
     </div>
   </ng-container>
 
-  <ng-container *ngIf="isReviewMode">
+  <!-- ── Step 2a: Existing review confirmation ── -->
+  <ng-container *ngIf="isConfirmReplace">
     <div class="bottom-sheet-handle"></div>
-    <div class="bottom-sheet-title">Leave a review</div>
+    <div class="bottom-sheet-title">You already reviewed this place</div>
 
-    <div class="star-row">
-      <span
-        *ngFor="let star of stars"
-        class="star"
-        [class.active]="star <= reviewRating"
-        (click)="setRating(star)">
-        ★
-      </span>
+    <div class="review-location-name" *ngIf="reviewLocationName">{{ reviewLocationName }}</div>
+
+    <div class="existing-review-card">
+      <div class="existing-review-stars">
+        <span *ngFor="let s of stars" class="existing-star" [class.filled]="s <= (existingReviewRating ?? 0)">★</span>
+      </div>
+      <div class="existing-review-comment" *ngIf="existingReviewComment">
+        "{{ existingReviewComment }}"
+      </div>
+      <div class="existing-review-comment muted" *ngIf="!existingReviewComment">No comment</div>
     </div>
 
+    <div class="confirm-replace-text">Would you like to update your review?</div>
+
+    <div class="review-actions">
+      <button class="sheet-btn-secondary" (click)="cancelReplaceReview()">Cancel</button>
+      <button class="sheet-btn-primary" (click)="confirmReplaceReview()">Update review</button>
+    </div>
+  </ng-container>
+
+  <!-- ── Step 2b: Review form ── -->
+  <ng-container *ngIf="isReviewForm">
+    <div class="bottom-sheet-handle"></div>
+
+    <div class="review-location-name" *ngIf="reviewLocationName">{{ reviewLocationName }}</div>
+    <div class="bottom-sheet-title">Leave a review</div>
+
+    <!-- Star rating -->
+    <div class="star-row">
+      <span *ngFor="let star of stars" class="star" [class.active]="star <= reviewRating" (click)="setRating(star)">★</span>
+    </div>
+
+    <!-- Comment -->
     <textarea
       class="review-textarea"
       [(ngModel)]="reviewComment"
@@ -114,9 +137,24 @@
       rows="3">
     </textarea>
 
+    <!-- Photo upload -->
+    <div class="photo-section">
+      <div class="photo-preview" *ngIf="reviewPhotoPreview">
+        <img [src]="reviewPhotoPreview" alt="Review photo" class="photo-thumb" />
+        <button class="photo-remove" (click)="removePhoto()">✕</button>
+      </div>
+
+      <label class="photo-upload-btn" *ngIf="!reviewPhotoPreview">
+        <span>📷 Add photo</span>
+        <input type="file" accept="image/jpeg,image/png,image/webp,image/heic" (change)="onPhotoSelected($event)" hidden />
+      </label>
+    </div>
+
     <div class="review-actions">
-      <button class="sheet-btn-secondary" (click)="isReviewMode = false; showNearbyLocations = true">Back</button>
-      <button class="sheet-btn-primary" (click)="submitReview()" [disabled]="reviewRating === 0">Submit</button>
+      <button class="sheet-btn-secondary" (click)="backFromReviewForm()">Back</button>
+      <button class="sheet-btn-primary" (click)="submitReview()" [disabled]="reviewRating === 0 || isSubmittingReview">
+        {{ isSubmittingReview ? 'Sending...' : 'Submit' }}
+      </button>
     </div>
   </ng-container>
 
