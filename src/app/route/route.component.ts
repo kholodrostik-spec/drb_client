@@ -118,6 +118,7 @@ export class RouteSettingsComponent implements OnInit {
   }
 
   save(): void {
+    console.log('Sending prefs:', this.prefs);
     this.isSaving = true;
     this.saveSuccess = false;
     this.errorMessage = '';

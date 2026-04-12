@@ -15,7 +15,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req).pipe(
       catchError((error: HttpErrorResponse) => {
         console.error(`[Interceptor] Error ${error.status} on ${req.url}`);
-        if (error.status === 403 || error.status === 401) {
+        if (error.status === 401) {
           console.log('[Interceptor] Clearing storage and redirecting');
           localStorage.removeItem('accessToken');
           localStorage.removeItem('userId');
