@@ -104,7 +104,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   private get customIcon(): L.Icon {
     return L.icon({
-      iconUrl: 'marker-icon.png',
+      iconUrl: 'map_marker_icon.svg',
       iconSize: [40, 40],
       iconAnchor: [20, 40],
       popupAnchor: [0, -40]
@@ -589,12 +589,36 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   onSearch(): void {
     const q = this.searchText.trim();
     if (q.length < 1) return;
+
+    // Спочатку шукаємо в своїй БД
     this.http.get<any[]>(
       `${this.SPRING_BASE}/api/locations/search?q=${encodeURIComponent(q)}&limit=1`
     ).subscribe({
       next: (results) => {
         if (results.length > 0) {
           this.selectSearchResult(results[0]);
+        } else {
+          // Fallback — шукаємо через Nominatim
+          this.searchNominatim(q);
+        }
+      },
+      error: () => this.searchNominatim(q)
+    });
+  }
+
+  private searchNominatim(q: string): void {
+    this.http.get<any[]>(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=ie`
+    ).subscribe({
+      next: (results) => {
+        if (results.length > 0) {
+          const r = results[0];
+          this.selectSearchResult({
+            id: 0,
+            name: r.display_name,
+            latitude: parseFloat(r.lat),
+            longitude: parseFloat(r.lon)
+          });
         }
       },
       error: () => {}
@@ -602,13 +626,27 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   selectSearchResult(result: {id: number, name: string, latitude: number, longitude: number, category?: string}): void {
-    this.searchText = result.name;
-    this.showSearchResults = false;
-    this.searchResults = [];
-    if (this.map) {
-      this.map.setView([result.latitude, result.longitude], 16);
-    }
-  }
+  this.searchText = result.name;
+  this.showSearchResults = false;
+  this.searchResults = [];
+
+  if (!this.map) return;
+
+  const latlng = L.latLng(result.latitude, result.longitude);
+  this.map.setView([result.latitude, result.longitude], 16);
+
+  this.clearSelectedMarker();
+
+  this.selectedPoint = latlng;
+  this.selectedMarker = L.marker([latlng.lat, latlng.lng], { icon: this.customIcon }).addTo(this.map);
+
+  this.reviewStep = 'actions';
+  this.showNearbyLocations = true;
+  this.nearbyLocations = [];
+  this.isBottomSheetOpen = true;
+
+  this.loadNearbyLocations(latlng);
+}
 
   @HostListener('window:resize')
   onResize(): void { this.map?.invalidateSize(); }
