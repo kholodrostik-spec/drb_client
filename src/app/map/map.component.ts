@@ -40,6 +40,7 @@ interface ReviewCheck {
   locationName: string | null;
   existingRating: number | null;
   existingComment: string | null;
+  existingPhotoUrl: string | null;
 }
 
 // Review form state
@@ -77,6 +78,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   reviewLocationName: string | null = null;
   existingReviewRating: number | null = null;
   existingReviewComment: string | null = null;
+  existingReviewPhotoUrl: string | null = null;
   isSubmittingReview = false;
 
   nearbyLocations: NearbyLocation[] = [];
@@ -293,6 +295,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           // User already reviewed this location — show confirmation
           this.existingReviewRating = check.existingRating;
           this.existingReviewComment = check.existingComment;
+          this.existingReviewPhotoUrl = check.existingPhotoUrl;
           this.reviewStep = 'review-confirm-replace';
         } else {
           // No existing review — go straight to form
@@ -385,6 +388,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.reviewComment = '';
     this.reviewPhoto = null;
     this.reviewPhotoPreview = null;
+    this.existingReviewPhotoUrl = null;
   }
 
   closeBottomSheet(): void {
