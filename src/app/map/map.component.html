@@ -106,7 +106,12 @@
       <div class="existing-review-comment" *ngIf="existingReviewComment">
         "{{ existingReviewComment }}"
       </div>
+      
       <div class="existing-review-comment muted" *ngIf="!existingReviewComment">No comment</div>
+      
+      <div class="existing-review-photo" *ngIf="existingReviewPhotoUrl">
+        <img [src]="existingReviewPhotoUrl" alt="Existing review photo" class="photo-thumb" />
+      </div>
     </div>
 
     <div class="confirm-replace-text">Would you like to update your review?</div>
