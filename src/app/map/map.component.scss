@@ -1,5 +1,3 @@
-@import 'leaflet/dist/leaflet.css';
-
 // ─── Host entrance ────────────────────────────────────────────────────────────
 
 :host {
@@ -12,21 +10,6 @@
 @keyframes map-enter {
   from { opacity: 0; }
   to   { opacity: 1; }
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-app-root {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
 
 // ─── Map wrapper ──────────────────────────────────────────────────────────────
@@ -46,6 +29,16 @@ app-root {
   height: 100%;
 }
 
+#map .mapboxgl-canvas-container,
+#map .mapboxgl-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+#map .mapboxgl-marker img {
+  display: block;
+}
+
 // ─── Menu toggle ──────────────────────────────────────────────────────────────
 
 .menu-toggle {
@@ -61,9 +54,10 @@ app-root {
   color: #fff;
   font-size: 28px;
   cursor: pointer;
-  font-family: Arial, Helvetica, sans-serif;
 
-  &:hover { background: rgba(30, 30, 30, 0.95); }
+  &:hover {
+    background: rgba(30, 30, 30, 0.95);
+  }
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
@@ -88,9 +82,10 @@ app-root {
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   padding-top: 84px;
-  font-family: Arial, Helvetica, sans-serif;
 
-  &.open { transform: translateX(0); }
+  &.open {
+    transform: translateX(0);
+  }
 }
 
 .sidebar-header {
@@ -98,7 +93,6 @@ app-root {
   color: #fff;
   font-size: 20px;
   font-weight: 700;
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 .sidebar-content {
@@ -118,10 +112,11 @@ app-root {
   font-size: 14px;
   text-align: left;
   cursor: pointer;
-  font-family: Arial, Helvetica, sans-serif;
   transition: background 0.15s;
 
-  &:hover { background: rgba(255, 255, 255, 0.08); }
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
 }
 
 // ─── Search area ──────────────────────────────────────────────────────────────
@@ -136,10 +131,15 @@ app-root {
   gap: 8px;
   transition: left 0.3s ease;
 
-  &.shifted { left: 300px; }
+  &.shifted {
+    left: 300px;
+  }
 }
 
-.search-box { display: flex; gap: 8px; }
+.search-box {
+  display: flex;
+  gap: 8px;
+}
 
 .search-input {
   width: 220px;
@@ -149,7 +149,6 @@ app-root {
   border: 1px solid #444;
   border-radius: 8px;
   font-size: 14px;
-  font-family: Arial, Helvetica, sans-serif;
   outline: none;
 }
 
@@ -160,7 +159,6 @@ app-root {
   border: 1px solid #444;
   border-radius: 8px;
   font-size: 14px;
-  font-family: Arial, Helvetica, sans-serif;
   cursor: pointer;
 }
 
@@ -184,7 +182,6 @@ app-root {
   color: #fff;
   font-size: 12px;
   font-weight: 700;
-  font-family: Arial, Helvetica, sans-serif;
   padding: 6px 16px;
   border-radius: 20px;
   pointer-events: none;
@@ -202,39 +199,27 @@ app-root {
   background: rgba(180, 0, 0, 0.88);
   color: #fff;
   font-size: 13px;
-  font-family: Arial, Helvetica, sans-serif;
   padding: 8px 18px;
   border-radius: 8px;
 }
 
-// ─── Leaflet popup overrides ──────────────────────────────────────────────────
-
-::ng-deep .custom-route-popup .leaflet-popup-content-wrapper {
-  background: rgba(18, 22, 34, 0.97);
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 12px;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-::ng-deep .custom-route-popup .leaflet-popup-tip { background: rgba(18, 22, 34, 0.97); }
-::ng-deep .custom-route-popup .leaflet-popup-content { margin: 12px; min-width: 180px; }
-::ng-deep .route-popup-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; font-family: Arial, Helvetica, sans-serif; }
-::ng-deep .route-popup-actions { display: flex; gap: 8px; }
-::ng-deep .popup-btn { padding: 8px 10px; border-radius: 8px; border: 1px solid #444; cursor: pointer; font-size: 13px; font-family: Arial, Helvetica, sans-serif; }
-::ng-deep .popup-btn-primary { background: #1f6feb; color: #fff; }
-::ng-deep .popup-btn-secondary { background: #222; color: #fff; }
-
 // ─── Nearby locations ─────────────────────────────────────────────────────────
 
-.nearby-section { margin-bottom: 16px; }
+.nearby-section {
+  margin-bottom: 16px;
+}
 
 .nearby-loading {
   font-size: 13px;
   color: #999;
   text-align: center;
   padding: 8px 0;
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+.nearby-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .nearby-label {
@@ -242,18 +227,12 @@ app-root {
   font-weight: 700;
   color: #999;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
-  font-family: Arial, Helvetica, sans-serif;
 }
 
-.nearby-list { display: flex; flex-direction: column; gap: 8px; }
-
 .nearby-card {
-  background: #f7f7f7;
-  border-radius: 12px;
-  padding: 10px 12px;
-  border: 1px solid #efefef;
+  background: #f5f5f5;
+  border-radius: 10px;
+  padding: 12px 14px;
 }
 
 .nearby-card-name {
@@ -261,10 +240,14 @@ app-root {
   font-weight: 700;
   color: #1a1a1a;
   margin-bottom: 4px;
-  font-family: Arial, Helvetica, sans-serif;
 }
 
-.nearby-card-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.nearby-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
 
 .nearby-card-category {
   font-size: 11px;
@@ -273,21 +256,18 @@ app-root {
   padding: 2px 8px;
   border-radius: 4px;
   font-weight: 700;
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 .nearby-card-rating {
   font-size: 12px;
   color: #f5a623;
   font-weight: 700;
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 .nearby-card-desc {
   font-size: 12px;
   color: #666;
   line-height: 1.4;
-  font-family: Arial, Helvetica, sans-serif;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -310,9 +290,10 @@ app-root {
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   max-height: 50vh;
   overflow-y: auto;
-  font-family: Arial, Helvetica, sans-serif;
 
-  &.open { transform: translateY(0); }
+  &.open {
+    transform: translateY(0);
+  }
 }
 
 .bottom-sheet-close {
@@ -332,9 +313,10 @@ app-root {
   justify-content: center;
   transition: background 0.2s;
   z-index: 10;
-  font-family: Arial, Helvetica, sans-serif;
 
-  &:hover { background: rgba(255, 255, 255, 0.2); }
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
 }
 
 .bottom-sheet-handle {
@@ -351,7 +333,6 @@ app-root {
   color: #fff;
   margin-bottom: 16px;
   text-align: center;
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 .bottom-sheet-actions {
@@ -371,28 +352,33 @@ app-root {
   border-radius: 12px;
   color: #fff;
   font-size: 15px;
-  font-family: Arial, Helvetica, sans-serif;
   cursor: pointer;
   transition: background 0.2s;
 
-  &:hover { background: rgba(255, 255, 255, 0.15); }
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
 }
 
-.sheet-btn-icon { font-size: 20px; }
-
-.sheet-btn-label { font-family: Arial, Helvetica, sans-serif; }
+.sheet-btn-icon {
+  font-size: 20px;
+}
 
 .sheet-hint {
   font-size: 13px;
   color: #888;
   text-align: center;
   margin-top: 8px;
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 // ─── Review form ──────────────────────────────────────────────────────────────
 
-.star-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+.star-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
 
 .star {
   font-size: 28px;
@@ -400,7 +386,9 @@ app-root {
   cursor: pointer;
   transition: color 0.2s;
 
-  &.active { color: #f5a623; }
+  &.active {
+    color: #f5a623;
+  }
 }
 
 .review-textarea {
@@ -411,12 +399,14 @@ app-root {
   border-radius: 12px;
   color: #fff;
   font-size: 14px;
-  font-family: Arial, Helvetica, sans-serif;
   resize: none;
   margin-bottom: 16px;
 }
 
-.review-actions { display: flex; gap: 10px; }
+.review-actions {
+  display: flex;
+  gap: 10px;
+}
 
 .sheet-btn-secondary {
   flex: 1;
@@ -426,7 +416,6 @@ app-root {
   border-radius: 10px;
   color: #fff;
   font-size: 14px;
-  font-family: Arial, Helvetica, sans-serif;
   cursor: pointer;
 }
 
@@ -439,10 +428,12 @@ app-root {
   color: #fff;
   font-size: 14px;
   font-weight: 700;
-  font-family: Arial, Helvetica, sans-serif;
   cursor: pointer;
 
-  &:disabled { background: #555; cursor: not-allowed; }
+  &:disabled {
+    background: #555;
+    cursor: not-allowed;
+  }
 }
 
 .sheet-loading {
@@ -450,24 +441,20 @@ app-root {
   padding: 20px;
   color: #fff;
   font-size: 14px;
-  font-family: Arial, Helvetica, sans-serif;
 }
 
-// ─── Add these styles to map.component.scss ───────────────────────────────────
+// ─── Review extra blocks ──────────────────────────────────────────────────────
 
-// Location name shown above review form
 .review-location-name {
   font-size: 13px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.5);
   text-align: center;
   margin-bottom: 4px;
-  font-family: Arial, Helvetica, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-// Existing review card shown in confirm-replace step
 .existing-review-card {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -486,17 +473,21 @@ app-root {
   font-size: 18px;
   color: rgba(255, 255, 255, 0.2);
 
-  &.filled { color: #f5a623; }
+  &.filled {
+    color: #f5a623;
+  }
 }
 
 .existing-review-comment {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;
-  font-family: Arial, Helvetica, sans-serif;
   font-style: italic;
 
-  &.muted { color: rgba(255, 255, 255, 0.3); font-style: normal; }
+  &.muted {
+    color: rgba(255, 255, 255, 0.3);
+    font-style: normal;
+  }
 }
 
 .confirm-replace-text {
@@ -504,10 +495,10 @@ app-root {
   color: rgba(255, 255, 255, 0.6);
   text-align: center;
   margin-bottom: 16px;
-  font-family: Arial, Helvetica, sans-serif;
 }
 
-// Photo upload section
+// ─── Photo upload ─────────────────────────────────────────────────────────────
+
 .photo-section {
   margin-bottom: 16px;
 }
@@ -523,7 +514,6 @@ app-root {
   border-radius: 10px;
   color: rgba(255, 255, 255, 0.6);
   font-size: 14px;
-  font-family: Arial, Helvetica, sans-serif;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
   width: 100%;
@@ -565,8 +555,12 @@ app-root {
   align-items: center;
   justify-content: center;
 
-  &:hover { background: rgba(200, 0, 0, 0.8); }
+  &:hover {
+    background: rgba(200, 0, 0, 0.8);
+  }
 }
+
+// ─── Search dropdown ──────────────────────────────────────────────────────────
 
 .search-dropdown {
   position: absolute;
@@ -577,7 +571,7 @@ app-root {
   border-radius: 0 0 12px 12px;
   overflow: hidden;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 
   &-item {
     display: flex;
@@ -585,11 +579,16 @@ app-root {
     align-items: center;
     padding: 10px 14px;
     cursor: pointer;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     transition: background 0.15s;
 
-    &:hover { background: rgba(255,255,255,0.08); }
-    &:last-child { border-bottom: none; }
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
   }
 }
 

@@ -3,7 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import * as L from 'leaflet';
+import { LOCAL_CONFIG } from '../local-config';
+import mapboxgl from 'mapbox-gl';
 
 interface NearbyLocation {
   id: number;
@@ -43,7 +44,6 @@ interface ReviewCheck {
   existingPhotoUrl: string | null;
 }
 
-// Review form state
 type ReviewStep = 'actions' | 'review-form' | 'review-confirm-replace';
 
 @Component({
@@ -54,7 +54,8 @@ type ReviewStep = 'actions' | 'review-form' | 'review-confirm-replace';
   styleUrls: ['./map.component.scss']
 })
 export class MapComponent implements AfterViewInit, OnDestroy {
-  private map?: L.Map;
+  private map?: mapboxgl.Map;
+  private confirmPopup?: mapboxgl.Popup;
 
   searchText = '';
   isSidebarOpen = false;
@@ -62,13 +63,24 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   routeErrorMessage = '';
   selectedCarProfile = '';
 
-  // Bottom sheet state
+  private readonly MAPBOX_TOKEN = LOCAL_CONFIG.mapboxToken;
+  private readonly MAP_STYLE = LOCAL_CONFIG.mapstyle;
+
+  private readonly SPRING_BASE = 'http://localhost:8080';
+  private readonly irelandBounds: mapboxgl.LngLatBoundsLike = [[-10.8, 51.2], [-5.3, 55.5]];
+
+  private readonly ROUTE_SOURCE_ID = 'route-source';
+  private readonly ROUTE_LAYER_ID = 'route-layer';
+  private readonly SNAP_START_SOURCE_ID = 'snap-start-source';
+  private readonly SNAP_START_LAYER_ID = 'snap-start-layer';
+  private readonly SNAP_END_SOURCE_ID = 'snap-end-source';
+  private readonly SNAP_END_LAYER_ID = 'snap-end-layer';
+
   isBottomSheetOpen = false;
   isLoadingRoute = false;
   isLoadingNearby = false;
   isLoadingReviewCheck = false;
 
-  // Review state
   reviewStep: ReviewStep = 'actions';
   reviewRating = 0;
   reviewComment = '';
@@ -85,42 +97,44 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   showNearbyLocations = true;
 
   selectedTransport: 'walk' | 'car' | null = null;
-  selectedPoint?: L.LatLng;
-  private selectedMarker?: L.Marker;
+  selectedPoint?: mapboxgl.LngLat;
+  private selectedMarker?: mapboxgl.Marker;
 
-  startPoint?: L.LatLng;
+  startPoint?: mapboxgl.LngLat;
   waitingForSecondPoint = false;
 
-  private startMarker?: L.Marker;
-  private endMarker?: L.Marker;
-  private nearestLine?: L.Polyline;
-  private routePolyline?: L.Polyline;
-  private snapStartPolyline?: L.Polyline;
-  private snapEndPolyline?: L.Polyline;
+  private startMarker?: mapboxgl.Marker;
+  private endMarker?: mapboxgl.Marker;
 
-  private readonly SPRING_BASE = 'http://localhost:8080';
+  private routePolyline?: true;
+  private snapStartPolyline?: true;
+  private snapEndPolyline?: true;
+  private nearestLine?: true;
+
+  searchResults: Array<{ id: number; name: string; latitude: number; longitude: number; category?: string }> = [];
+  showSearchResults = false;
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  private readonly irelandBounds = L.latLngBounds([51.2, -10.8], [55.5, -5.3]);
+  get isReviewMode(): boolean {
+    return this.reviewStep !== 'actions';
+  }
 
-  private get customIcon(): L.Icon {
-    return L.icon({
-      iconUrl: 'map_marker_icon.svg',
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-      popupAnchor: [0, -40]
-    });
+  get isConfirmReplace(): boolean {
+    return this.reviewStep === 'review-confirm-replace';
+  }
+
+  get isReviewForm(): boolean {
+    return this.reviewStep === 'review-form';
+  }
+
+  get stars(): number[] {
+    return [1, 2, 3, 4, 5];
   }
 
   private get userId(): string {
     return localStorage.getItem('userId') ?? '0';
   }
-
-  // Convenience getters for template
-  get isReviewMode(): boolean { return this.reviewStep !== 'actions'; }
-  get isConfirmReplace(): boolean { return this.reviewStep === 'review-confirm-replace'; }
-  get isReviewForm(): boolean { return this.reviewStep === 'review-form'; }
 
   ngAfterViewInit(): void {
     setTimeout(() => this.createMap());
@@ -130,70 +144,53 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const container = document.getElementById('map');
     if (!container || this.map) return;
 
-    this.map = L.map(container, {
-      zoomControl: false,
-      attributionControl: false,
-      minZoom: 7.5,
+    mapboxgl.accessToken = this.MAPBOX_TOKEN;
+
+    this.map = new mapboxgl.Map({
+      container: 'map',
+      style: this.MAP_STYLE,
+      center: [-8.5, 53.4],
+      zoom: 6,
+      minZoom: 5,
       maxZoom: 18,
-      maxBounds: this.irelandBounds,
-      maxBoundsViscosity: 1.0,
-      worldCopyJump: false
+      maxBounds: this.irelandBounds
     });
 
-    L.control.zoom({ position: 'bottomright' }).addTo(this.map);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { noWrap: true }).addTo(this.map);
-    this.map.fitBounds(this.irelandBounds, { padding: [20, 20] });
+    this.map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+    this.map.on('load', () => {
+      this.map?.fitBounds(this.irelandBounds, { padding: 20 });
+
+      const currentZoom = this.map?.getZoom();
+      if (currentZoom !== undefined) {
+        this.map?.setMinZoom(currentZoom);
+      }
+
+      this.map?.resize();
+    });
 
     setTimeout(() => {
-      this.map?.invalidateSize();
-      this.map?.fitBounds(this.irelandBounds, { padding: [20, 20] });
-    }, 100);
+      this.map?.resize();
+    }, 200);
 
-    this.map.on('click', (event: L.LeafletMouseEvent) => this.onMapClick(event.latlng));
+    this.map.on('click', (event) => this.onMapClick(event.lngLat));
   }
 
-  // ─── Map click handler ────────────────────────────────────────────────────────
-
-  private onMapClick(latlng: L.LatLng): void {
+  private onMapClick(latlng: mapboxgl.LngLat): void {
     if (!this.map) return;
 
     const hasExistingRoute = !!this.routePolyline || !!this.snapStartPolyline || !!this.snapEndPolyline;
 
     if (hasExistingRoute) {
-      const popup = L.popup({ closeButton: false, autoClose: false, closeOnClick: false, className: 'confirm-popup' })
-        .setLatLng(latlng)
-        .setContent(`
-          <div class="popup-confirm">
-            <div>Erase current route?</div>
-            <div class="popup-actions">
-              <button id="confirm-yes" class="popup-btn popup-btn-ok">OK</button>
-              <button id="confirm-no" class="popup-btn popup-btn-cancel">Cancel</button>
-            </div>
-          </div>
-        `)
-        .openOn(this.map);
-
-      setTimeout(() => {
-        document.getElementById('confirm-yes')?.addEventListener('click', () => {
-          this.map?.closePopup();
-          this.clearRouteLines();
-          this.removeRouteMarkers();
-          this.resetRouteSelection();
-          this.routeErrorMessage = '';
-          this.selectedCarProfile = '';
-          this.onMapClick(latlng);
-        });
-        document.getElementById('confirm-no')?.addEventListener('click', () => this.map?.closePopup());
-      }, 0);
+      this.openConfirmPopup(latlng);
       return;
     }
 
     if (this.waitingForSecondPoint && this.selectedTransport) {
       this.clearSelectedMarker();
       this.selectedPoint = latlng;
-      this.selectedMarker = L.marker([latlng.lat, latlng.lng], { icon: this.customIcon }).addTo(this.map);
       this.endMarker?.remove();
-      this.endMarker = this.selectedMarker;
+      this.endMarker = this.createMarker(latlng);
       this.selectedMarker = undefined;
 
       if (this.selectedTransport === 'walk') {
@@ -204,10 +201,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    // First click
     this.clearSelectedMarker();
     this.selectedPoint = latlng;
-    this.selectedMarker = L.marker([latlng.lat, latlng.lng], { icon: this.customIcon }).addTo(this.map);
+    this.selectedMarker = this.createMarker(latlng);
 
     this.reviewStep = 'actions';
     this.showNearbyLocations = true;
@@ -217,28 +213,98 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.loadNearbyLocations(latlng);
   }
 
-  private removeRouteMarkers(): void {
-    this.startMarker?.remove(); this.startMarker = undefined;
-    this.endMarker?.remove(); this.endMarker = undefined;
-    this.selectedMarker?.remove(); this.selectedMarker = undefined;
+  private openConfirmPopup(latlng: mapboxgl.LngLat): void {
+    if (!this.map) return;
+
+    this.confirmPopup?.remove();
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'popup-confirm';
+    wrapper.innerHTML = `
+      <div>Erase current route?</div>
+      <div class="popup-actions" style="display:flex;gap:8px;margin-top:8px;">
+        <button id="confirm-yes" class="popup-btn popup-btn-ok">OK</button>
+        <button id="confirm-no" class="popup-btn popup-btn-cancel">Cancel</button>
+      </div>
+    `;
+
+    this.confirmPopup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      className: 'confirm-popup'
+    })
+      .setLngLat(latlng)
+      .setDOMContent(wrapper)
+      .addTo(this.map);
+
+    setTimeout(() => {
+      wrapper.querySelector('#confirm-yes')?.addEventListener('click', () => {
+        this.confirmPopup?.remove();
+        this.clearRouteLines();
+        this.removeRouteMarkers();
+        this.resetRouteSelection();
+        this.routeErrorMessage = '';
+        this.selectedCarProfile = '';
+        this.onMapClick(latlng);
+      });
+
+      wrapper.querySelector('#confirm-no')?.addEventListener('click', () => {
+        this.confirmPopup?.remove();
+      });
+    }, 0);
   }
 
-  // ─── Load nearby locations ────────────────────────────────────────────────────
+  private createMarker(lngLat: mapboxgl.LngLat): mapboxgl.Marker {
+    if (!this.map) {
+      throw new Error('Map is not initialized');
+    }
 
-  private loadNearbyLocations(latlng: L.LatLng): void {
+    const img = document.createElement('img');
+    img.src = '/map_marker_icon.svg';
+    img.alt = 'Marker';
+    img.style.width = '40px';
+    img.style.height = '40px';
+    img.style.display = 'block';
+    img.style.cursor = 'pointer';
+
+    return new mapboxgl.Marker({
+      element: img,
+      anchor: 'bottom'
+    })
+      .setLngLat(lngLat)
+      .addTo(this.map);
+  }
+
+  private removeRouteMarkers(): void {
+    this.startMarker?.remove();
+    this.startMarker = undefined;
+
+    this.endMarker?.remove();
+    this.endMarker = undefined;
+
+    this.selectedMarker?.remove();
+    this.selectedMarker = undefined;
+  }
+
+  private loadNearbyLocations(latlng: mapboxgl.LngLat): void {
     this.isLoadingNearby = true;
     this.http.get<NearbyLocation[]>(
       `${this.SPRING_BASE}/api/map/nearest?lat=${latlng.lat}&lon=${latlng.lng}&limit=3`
     ).subscribe({
-      next: (locations) => { this.nearbyLocations = locations; this.isLoadingNearby = false; },
-      error: () => { this.isLoadingNearby = false; this.nearbyLocations = []; }
+      next: (locations) => {
+        this.nearbyLocations = locations;
+        this.isLoadingNearby = false;
+      },
+      error: () => {
+        this.isLoadingNearby = false;
+        this.nearbyLocations = [];
+      }
     });
   }
 
-  // ─── Bottom sheet actions ─────────────────────────────────────────────────────
-
   onWalkRoute(): void {
     if (!this.selectedPoint) return;
+
     if (!this.startPoint) {
       this.startPoint = this.selectedPoint;
       this.startMarker = this.selectedMarker;
@@ -250,6 +316,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.closeBottomSheet();
       return;
     }
+
     const from = this.startPoint;
     const to = this.selectedPoint;
     this.closeBottomSheet();
@@ -258,6 +325,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   onCarRoute(): void {
     if (!this.selectedPoint) return;
+
     if (!this.startPoint) {
       this.startPoint = this.selectedPoint;
       this.startMarker = this.selectedMarker;
@@ -269,13 +337,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.closeBottomSheet();
       return;
     }
+
     const from = this.startPoint;
     const to = this.selectedPoint;
     this.closeBottomSheet();
     this.buildCarRoute(from, to);
   }
 
-  /** Leave review — calls /api/locations/review-check first */
   onLeaveReview(): void {
     if (!this.selectedPoint) return;
 
@@ -292,13 +360,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         this.reviewLocationName = check.locationName;
 
         if (check.hasReview) {
-          // User already reviewed this location — show confirmation
           this.existingReviewRating = check.existingRating;
           this.existingReviewComment = check.existingComment;
           this.existingReviewPhotoUrl = check.existingPhotoUrl;
           this.reviewStep = 'review-confirm-replace';
         } else {
-          // No existing review — go straight to form
           this.resetReviewForm();
           this.reviewStep = 'review-form';
         }
@@ -313,7 +379,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  /** User confirmed they want to replace existing review */
   confirmReplaceReview(): void {
     this.resetReviewForm();
     this.reviewRating = this.existingReviewRating ?? 0;
@@ -321,13 +386,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.reviewStep = 'review-form';
   }
 
-  /** User cancelled replacing review */
   cancelReplaceReview(): void {
     this.reviewStep = 'actions';
     this.showNearbyLocations = true;
   }
 
-  /** Back from review form to actions */
   backFromReviewForm(): void {
     this.reviewStep = 'actions';
     this.showNearbyLocations = true;
@@ -341,7 +404,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     this.reviewPhoto = file;
 
-    // Generate preview
     const reader = new FileReader();
     reader.onload = (e) => {
       this.reviewPhotoPreview = e.target?.result as string;
@@ -407,10 +469,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.router.navigate(['/route']);
   }
 
-  // ─── Route building ───────────────────────────────────────────────────────────
-
-  private buildWalkRoute(from: L.LatLng, to: L.LatLng): void {
+  private buildWalkRoute(from: mapboxgl.LngLat, to: mapboxgl.LngLat): void {
     if (!this.map) return;
+
     this.clearRouteLines();
     this.isLoadingRoute = true;
 
@@ -423,12 +484,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         this.routeErrorMessage = drawn ? '' : 'No route found between selected points.';
         if (drawn) this.resetRouteSelection();
       },
-      error: () => { this.isLoadingRoute = false; }
+      error: () => {
+        this.isLoadingRoute = false;
+      }
     });
   }
 
-  private buildCarRoute(from: L.LatLng, to: L.LatLng): void {
+  private buildCarRoute(from: mapboxgl.LngLat, to: mapboxgl.LngLat): void {
     if (!this.map) return;
+
     this.clearRouteLines();
     this.isLoadingRoute = true;
     this.selectedCarProfile = '';
@@ -440,109 +504,278 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       next: (response) => {
         this.isLoadingRoute = false;
         const selected = response?.selected;
-        if (!selected?.routeGeoJson) { this.routeErrorMessage = 'No car route found.'; return; }
+        if (!selected?.routeGeoJson) {
+          this.routeErrorMessage = 'No car route found.';
+          return;
+        }
 
         this.selectedCarProfile = response.selectedProfile;
 
         let routeGeoJson: any;
-        try { routeGeoJson = JSON.parse(selected.routeGeoJson); }
-        catch { this.routeErrorMessage = 'Invalid route data.'; return; }
-
-        const allCoords: [number, number][] = [];
-        if (routeGeoJson.type === 'LineString') {
-          for (const p of routeGeoJson.coordinates) { if (p?.length >= 2) allCoords.push([p[1], p[0]]); }
-        } else if (routeGeoJson.type === 'MultiLineString') {
-          for (const seg of routeGeoJson.coordinates ?? [])
-            for (const p of seg ?? []) { if (p?.length >= 2) allCoords.push([p[1], p[0]]); }
+        try {
+          routeGeoJson = JSON.parse(selected.routeGeoJson);
+        } catch {
+          this.routeErrorMessage = 'Invalid route data.';
+          return;
         }
 
-        if (allCoords.length === 0) { this.routeErrorMessage = 'Route has no coordinates.'; return; }
+        if (!this.hasCoordinates(routeGeoJson)) {
+          this.routeErrorMessage = 'Route has no coordinates.';
+          return;
+        }
 
         if (selected.snapStartGeoJson) {
           try {
-            const snap = JSON.parse(selected.snapStartGeoJson);
-            const coords = snap.coordinates?.filter((p: any) => Array.isArray(p) && p.length >= 2)
-              .map((p: number[]) => [p[1], p[0]] as [number, number]);
-            if (coords?.length > 0)
-              this.snapStartPolyline = L.polyline(coords, { color: '#ff6b00', weight: 3, dashArray: '6 6' }).addTo(this.map!);
-          } catch { /* ignore */ }
+            const snapStart = JSON.parse(selected.snapStartGeoJson);
+            if (this.hasCoordinates(snapStart)) {
+              this.addLineLayer(
+                this.SNAP_START_SOURCE_ID,
+                this.SNAP_START_LAYER_ID,
+                snapStart,
+                '#ff6b00',
+                3,
+                [2, 2]
+              );
+              this.snapStartPolyline = true;
+            }
+          } catch {}
         }
 
         if (selected.snapEndGeoJson) {
           try {
-            const snap = JSON.parse(selected.snapEndGeoJson);
-            const coords = snap.coordinates?.filter((p: any) => Array.isArray(p) && p.length >= 2)
-              .map((p: number[]) => [p[1], p[0]] as [number, number]);
-            if (coords?.length > 0)
-              this.snapEndPolyline = L.polyline(coords, { color: '#ff6b00', weight: 3, dashArray: '6 6' }).addTo(this.map!);
-          } catch { /* ignore */ }
+            const snapEnd = JSON.parse(selected.snapEndGeoJson);
+            if (this.hasCoordinates(snapEnd)) {
+              this.addLineLayer(
+                this.SNAP_END_SOURCE_ID,
+                this.SNAP_END_LAYER_ID,
+                snapEnd,
+                '#ff6b00',
+                3,
+                [2, 2]
+              );
+              this.snapEndPolyline = true;
+            }
+          } catch {}
         }
 
-        this.routePolyline = L.polyline(allCoords, { color: '#ff6b00', weight: 5, lineJoin: 'round', lineCap: 'round' }).addTo(this.map!);
-        const layers: L.Layer[] = [this.routePolyline];
-        if (this.snapStartPolyline) layers.push(this.snapStartPolyline);
-        if (this.snapEndPolyline) layers.push(this.snapEndPolyline);
-        this.map?.fitBounds(L.featureGroup(layers).getBounds(), { padding: [40, 40] });
+        this.addLineLayer(
+          this.ROUTE_SOURCE_ID,
+          this.ROUTE_LAYER_ID,
+          routeGeoJson,
+          '#ff6b00',
+          5
+        );
+        this.routePolyline = true;
+
+        this.fitMapToGeoJsons(routeGeoJson, selected.snapStartGeoJson ? JSON.parse(selected.snapStartGeoJson) : null, selected.snapEndGeoJson ? JSON.parse(selected.snapEndGeoJson) : null);
         this.routeErrorMessage = '';
         this.resetRouteSelection();
       },
-      error: () => { this.isLoadingRoute = false; this.routeErrorMessage = 'Car route request failed.'; }
+      error: () => {
+        this.isLoadingRoute = false;
+        this.routeErrorMessage = 'Car route request failed.';
+      }
     });
   }
 
   private drawRouteFromSpring(response: any): boolean {
     if (!this.map || !response?.routeGeoJson) return false;
+
     this.clearRouteLines();
+
+    let routeGeoJson: any;
+    try {
+      routeGeoJson = JSON.parse(response.routeGeoJson);
+    } catch {
+      return false;
+    }
+
+    if (!this.hasCoordinates(routeGeoJson)) return false;
+
+    let snapStartGeoJson: any = null;
+    let snapEndGeoJson: any = null;
 
     if (response.snapStartGeoJson) {
       try {
-        const snap = JSON.parse(response.snapStartGeoJson);
-        const coords = snap.coordinates?.filter((p: any) => Array.isArray(p) && p.length >= 2)
-          .map((p: number[]) => [p[1], p[0]] as [number, number]);
-        if (coords?.length > 0)
-          this.snapStartPolyline = L.polyline(coords, { color: '#ff4444', weight: 3, dashArray: '6 6' }).addTo(this.map);
-      } catch { /* ignore */ }
+        snapStartGeoJson = JSON.parse(response.snapStartGeoJson);
+        if (this.hasCoordinates(snapStartGeoJson)) {
+          this.addLineLayer(
+            this.SNAP_START_SOURCE_ID,
+            this.SNAP_START_LAYER_ID,
+            snapStartGeoJson,
+            '#0062ff',
+            3,
+            [2, 2]
+          );
+          this.snapStartPolyline = true;
+        }
+      } catch {}
     }
 
     if (response.snapEndGeoJson) {
       try {
-        const snap = JSON.parse(response.snapEndGeoJson);
-        const coords = snap.coordinates?.filter((p: any) => Array.isArray(p) && p.length >= 2)
-          .map((p: number[]) => [p[1], p[0]] as [number, number]);
-        if (coords?.length > 0)
-          this.snapEndPolyline = L.polyline(coords, { color: '#44ff44', weight: 3, dashArray: '6 6' }).addTo(this.map);
-      } catch { /* ignore */ }
+        snapEndGeoJson = JSON.parse(response.snapEndGeoJson);
+        if (this.hasCoordinates(snapEndGeoJson)) {
+          this.addLineLayer(
+            this.SNAP_END_SOURCE_ID,
+            this.SNAP_END_LAYER_ID,
+            snapEndGeoJson,
+            '#0062ff',
+            3,
+            [2, 2]
+          );
+          this.snapEndPolyline = true;
+        }
+      } catch {}
     }
 
-    let routeGeoJson: any;
-    try { routeGeoJson = JSON.parse(response.routeGeoJson); } catch { return false; }
+    this.addLineLayer(
+      this.ROUTE_SOURCE_ID,
+      this.ROUTE_LAYER_ID,
+      routeGeoJson,
+      '#0062ff',
+      5
+    );
+    this.routePolyline = true;
 
-    const allCoords: [number, number][] = [];
-    if (routeGeoJson.type === 'LineString') {
-      for (const p of routeGeoJson.coordinates) { if (p?.length >= 2) allCoords.push([p[1], p[0]]); }
-    } else if (routeGeoJson.type === 'MultiLineString') {
-      for (const seg of routeGeoJson.coordinates ?? [])
-        for (const p of seg ?? []) { if (p?.length >= 2) allCoords.push([p[1], p[0]]); }
-    }
-
-    if (allCoords.length === 0) return false;
-
-    this.routePolyline = L.polyline(allCoords, { color: '#2f80ff', weight: 5, lineJoin: 'round', lineCap: 'round' }).addTo(this.map);
-    this.map.fitBounds(this.routePolyline.getBounds(), { padding: [40, 40] });
+    this.fitMapToGeoJsons(routeGeoJson, snapStartGeoJson, snapEndGeoJson);
     return true;
   }
 
-  // ─── Cleanup ──────────────────────────────────────────────────────────────────
+  private addLineLayer(
+    sourceId: string,
+    layerId: string,
+    geometry: any,
+    color: string,
+    width: number,
+    dashArray?: number[]
+  ): void {
+    if (!this.map) return;
+
+    const feature = this.toFeature(geometry);
+    if (!feature) return;
+
+    this.removeLayerIfExists(layerId);
+    this.removeSourceIfExists(sourceId);
+
+    this.map.addSource(sourceId, {
+      type: 'geojson',
+      data: feature
+    });
+
+    this.map.addLayer({
+      id: layerId,
+      type: 'line',
+      source: sourceId,
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': color,
+        'line-width': width,
+        ...(dashArray ? { 'line-dasharray': dashArray } : {})
+      }
+    });
+
+    console.log('layer added', layerId, this.map.getLayer(layerId));
+  }
+
+  private toFeature(geometry: any): any {
+    if (!geometry) return null;
+    if (geometry.type === 'Feature') return geometry;
+
+    return {
+      type: 'Feature',
+      properties: {},
+      geometry
+    };
+  }
+
+  private hasCoordinates(geoJson: any): boolean {
+    if (!geoJson) return false;
+
+    const geometry = geoJson.type === 'Feature' ? geoJson.geometry : geoJson;
+    if (!geometry) return false;
+
+    if (geometry.type === 'LineString') {
+      return Array.isArray(geometry.coordinates) && geometry.coordinates.length > 0;
+    }
+
+    if (geometry.type === 'MultiLineString') {
+      return Array.isArray(geometry.coordinates) &&
+        geometry.coordinates.some((segment: any[]) => Array.isArray(segment) && segment.length > 0);
+    }
+
+    return false;
+  }
+
+  private fitMapToGeoJsons(...geoJsons: any[]): void {
+    if (!this.map) return;
+
+    let bounds: mapboxgl.LngLatBounds | null = null;
+
+    const extend = (coord: any) => {
+      if (!Array.isArray(coord) || coord.length < 2) return;
+      if (!bounds) bounds = new mapboxgl.LngLatBounds(coord as [number, number], coord as [number, number]);
+      else bounds.extend(coord as [number, number]);
+    };
+
+    const walkGeometry = (geometry: any) => {
+      if (!geometry) return;
+
+      if (geometry.type === 'LineString') {
+        for (const coord of geometry.coordinates ?? []) extend(coord);
+      } else if (geometry.type === 'MultiLineString') {
+        for (const segment of geometry.coordinates ?? []) {
+          for (const coord of segment ?? []) extend(coord);
+        }
+      }
+    };
+
+    for (const item of geoJsons) {
+      if (!item) continue;
+      const geometry = item.type === 'Feature' ? item.geometry : item;
+      walkGeometry(geometry);
+    }
+
+    if (bounds) {
+      this.map.fitBounds(bounds, { padding: 40 });
+    }
+  }
+
+  private removeLayerIfExists(layerId: string): void {
+    if (this.map?.getLayer(layerId)) {
+      this.map.removeLayer(layerId);
+    }
+  }
+
+  private removeSourceIfExists(sourceId: string): void {
+    if (this.map?.getSource(sourceId)) {
+      this.map.removeSource(sourceId);
+    }
+  }
 
   private clearSelectedMarker(): void {
-    if (this.selectedMarker && this.map) { this.map.removeLayer(this.selectedMarker); this.selectedMarker = undefined; }
+    this.selectedMarker?.remove();
+    this.selectedMarker = undefined;
     this.selectedPoint = undefined;
   }
 
   private clearRouteLines(): void {
-    this.routePolyline?.remove(); this.routePolyline = undefined;
-    this.snapStartPolyline?.remove(); this.snapStartPolyline = undefined;
-    this.snapEndPolyline?.remove(); this.snapEndPolyline = undefined;
+    this.removeLayerIfExists(this.ROUTE_LAYER_ID);
+    this.removeSourceIfExists(this.ROUTE_SOURCE_ID);
+
+    this.removeLayerIfExists(this.SNAP_START_LAYER_ID);
+    this.removeSourceIfExists(this.SNAP_START_SOURCE_ID);
+
+    this.removeLayerIfExists(this.SNAP_END_LAYER_ID);
+    this.removeSourceIfExists(this.SNAP_END_SOURCE_ID);
+
+    this.routePolyline = undefined;
+    this.snapStartPolyline = undefined;
+    this.snapEndPolyline = undefined;
+    this.nearestLine = undefined;
   }
 
   private resetRouteSelection(): void {
@@ -555,22 +788,21 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   clearMap(): void {
     if (!this.map) return;
+
     this.clearRouteLines();
     this.removeRouteMarkers();
     this.resetRouteSelection();
-    this.nearestLine?.remove(); this.nearestLine = undefined;
+    this.nearestLine = undefined;
     this.closeBottomSheet();
     this.routeErrorMessage = '';
     this.selectedCarProfile = '';
+    this.confirmPopup?.remove();
   }
 
   toggleSidebar(): void {
     this.isSidebarOpen = !this.isSidebarOpen;
-    setTimeout(() => this.map?.invalidateSize(), 310);
+    setTimeout(() => this.map?.resize(), 310);
   }
-
-  searchResults: Array<{id: number, name: string, latitude: number, longitude: number, category?: string}> = [];
-  showSearchResults = false;
 
   onSearchInput(): void {
     const q = this.searchText.trim();
@@ -579,6 +811,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.showSearchResults = false;
       return;
     }
+
     this.http.get<any[]>(
       `${this.SPRING_BASE}/api/locations/search?q=${encodeURIComponent(q)}&limit=5`
     ).subscribe({
@@ -586,7 +819,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         this.searchResults = results;
         this.showSearchResults = results.length > 0;
       },
-      error: () => { this.searchResults = []; this.showSearchResults = false; }
+      error: () => {
+        this.searchResults = [];
+        this.showSearchResults = false;
+      }
     });
   }
 
@@ -594,7 +830,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const q = this.searchText.trim();
     if (q.length < 1) return;
 
-    // Спочатку шукаємо в своїй БД
     this.http.get<any[]>(
       `${this.SPRING_BASE}/api/locations/search?q=${encodeURIComponent(q)}&limit=1`
     ).subscribe({
@@ -602,7 +837,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         if (results.length > 0) {
           this.selectSearchResult(results[0]);
         } else {
-          // Fallback — шукаємо через Nominatim
           this.searchNominatim(q);
         }
       },
@@ -629,33 +863,41 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  selectSearchResult(result: {id: number, name: string, latitude: number, longitude: number, category?: string}): void {
-  this.searchText = result.name;
-  this.showSearchResults = false;
-  this.searchResults = [];
+  selectSearchResult(result: { id: number; name: string; latitude: number; longitude: number; category?: string }): void {
+    this.searchText = result.name;
+    this.showSearchResults = false;
+    this.searchResults = [];
 
-  if (!this.map) return;
+    if (!this.map) return;
 
-  const latlng = L.latLng(result.latitude, result.longitude);
-  this.map.setView([result.latitude, result.longitude], 16);
+    const lngLat = new mapboxgl.LngLat(result.longitude, result.latitude);
 
-  this.clearSelectedMarker();
+    this.map.easeTo({
+      center: [result.longitude, result.latitude],
+      zoom: 16
+    });
 
-  this.selectedPoint = latlng;
-  this.selectedMarker = L.marker([latlng.lat, latlng.lng], { icon: this.customIcon }).addTo(this.map);
+    this.clearSelectedMarker();
 
-  this.reviewStep = 'actions';
-  this.showNearbyLocations = true;
-  this.nearbyLocations = [];
-  this.isBottomSheetOpen = true;
+    this.selectedPoint = lngLat;
+    this.selectedMarker = this.createMarker(lngLat);
 
-  this.loadNearbyLocations(latlng);
-}
+    this.reviewStep = 'actions';
+    this.showNearbyLocations = true;
+    this.nearbyLocations = [];
+    this.isBottomSheetOpen = true;
+
+    this.loadNearbyLocations(lngLat);
+  }
 
   @HostListener('window:resize')
-  onResize(): void { this.map?.invalidateSize(); }
+  onResize(): void {
+    this.map?.resize();
+  }
 
-  ngOnDestroy(): void { this.map?.remove(); this.map = undefined; }
-
-  get stars(): number[] { return [1, 2, 3, 4, 5]; }
+  ngOnDestroy(): void {
+    this.confirmPopup?.remove();
+    this.map?.remove();
+    this.map = undefined;
+  }
 }
