@@ -4,6 +4,18 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## Development server
 
+## Local Mapbox config
+
+To run the map locally, create this file:
+
+```ts
+src/app/local-config.ts
+```
+
+export const LOCAL_CONFIG = {
+  mapboxToken: 'YOUR_MAPBOX_PUBLIC_TOKEN'
+};
+
 To start a local development server, run:
 
 ```bash
