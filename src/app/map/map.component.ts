@@ -345,29 +345,48 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   onLeaveReview(): void {
+    console.log('onLeaveReview fired', this.selectedPoint, this.isLoadingReviewCheck);
     if (!this.selectedPoint) return;
 
     this.showNearbyLocations = false;
     this.isLoadingReviewCheck = true;
 
-    this.http.get<ReviewCheck>(
-      `${this.SPRING_BASE}/api/locations/review-check` +
-      `?lat=${this.selectedPoint.lat}&lon=${this.selectedPoint.lng}&userId=${this.userId}`
+    this.http.get<NearbyLocation>(
+      `${this.SPRING_BASE}/api/locations/nearest` +
+      `?lat=${this.selectedPoint.lat}&lon=${this.selectedPoint.lng}`
     ).subscribe({
-      next: (check) => {
-        this.isLoadingReviewCheck = false;
-        this.reviewLocationId = check.locationId;
-        this.reviewLocationName = check.locationName;
+      next: (nearest) => {
+        this.reviewLocationId = nearest.id;
+        this.reviewLocationName = nearest.name;
 
-        if (check.hasReview) {
-          this.existingReviewRating = check.existingRating;
-          this.existingReviewComment = check.existingComment;
-          this.existingReviewPhotoUrl = check.existingPhotoUrl;
-          this.reviewStep = 'review-confirm-replace';
-        } else {
-          this.resetReviewForm();
-          this.reviewStep = 'review-form';
-        }
+        this.http.get<ReviewCheck>(
+          `${this.SPRING_BASE}/api/locations/review-check` +
+          `?lat=${nearest.latitude}&lon=${nearest.longitude}&userId=${this.userId}`
+        ).subscribe({
+          next: (check) => {
+            this.isLoadingReviewCheck = false;
+
+            this.reviewLocationId = check.locationId ?? nearest.id;
+            this.reviewLocationName = check.locationName ?? nearest.name;
+
+            if (check.hasReview) {
+              this.existingReviewRating = check.existingRating;
+              this.existingReviewComment = check.existingComment;
+              this.existingReviewPhotoUrl = check.existingPhotoUrl;
+              this.reviewStep = 'review-confirm-replace';
+            } else {
+              this.resetReviewForm();
+              this.reviewStep = 'review-form';
+            }
+          },
+          error: () => {
+            this.isLoadingReviewCheck = false;
+            this.reviewLocationId = nearest.id;
+            this.reviewLocationName = nearest.name;
+            this.resetReviewForm();
+            this.reviewStep = 'review-form';
+          }
+        });
       },
       error: () => {
         this.isLoadingReviewCheck = false;
@@ -532,7 +551,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
                 this.SNAP_START_SOURCE_ID,
                 this.SNAP_START_LAYER_ID,
                 snapStart,
-                '#ff6b00',
+                '#ff9f40',
                 3,
                 [2, 2]
               );
@@ -549,7 +568,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
                 this.SNAP_END_SOURCE_ID,
                 this.SNAP_END_LAYER_ID,
                 snapEnd,
-                '#ff6b00',
+                '#ff9f40',
                 3,
                 [2, 2]
               );
@@ -562,7 +581,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           this.ROUTE_SOURCE_ID,
           this.ROUTE_LAYER_ID,
           routeGeoJson,
-          '#ff6b00',
+          '#ff9f40',
           5
         );
         this.routePolyline = true;
